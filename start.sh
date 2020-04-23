@@ -22,6 +22,13 @@ if [ -n "$MONGO_PORT" ]; then
   sed -i "s/mongoport = 27017/mongoport = $MONGO_PORT/g" ./config.py
 fi
 
+if [ -n "$DB_USER" ]; then
+  sed -i "s/dbuser = \"admin\"/dbuser = \"$DB_USER\"/g" ./config.py
+fi
+if [ -n "$DB_PASS" ]; then
+  sed -i "s/dbpass = \"admin\"/dbpass = \"$DB_PASS\"/g" ./config.py
+fi
+
 if [ ! -f "$LOGFILE" ]; then
   touch "$LOGFILE"
 fi

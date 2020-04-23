@@ -84,7 +84,7 @@ if __name__ == "__main__":
             print("db.managers installed")
             try:
                 username = "admin"
-                password = "admin"
+                password = "p@nd3mic" #admin
                 user = masterdb.managers.find_one({"username": username})
                 if not user:
                     manager = {}

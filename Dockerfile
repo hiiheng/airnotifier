@@ -10,7 +10,7 @@ RUN apt-get update && \
 
 RUN pip3 install pipenv
 
-RUN git clone -b 2.x https://github.com/airnotifier/airnotifier.git /airnotifier
+ADD . /airnotifier
 RUN mkdir -p /var/airnotifier/pemdir && \
     mkdir -p /var/log/airnotifier
 
@@ -18,6 +18,10 @@ VOLUME ["/airnotifier", "/var/log/airnotifier", "/var/airnotifier/pemdir"]
 WORKDIR /airnotifier
 
 RUN pipenv install --deploy
+
+ADD setup.sh /airnotifier
+RUN chmod a+x /airnotifier/setup.sh
+RUN /airnotifier/setup.sh
 
 ADD start.sh /airnotifier
 RUN chmod a+x /airnotifier/start.sh
