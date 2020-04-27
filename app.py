@@ -112,6 +112,8 @@ class AirNotifierApp(tornado.web.Application):
     def send_broadcast(self, appname, appdb, **kwargs):
         channel = kwargs.get("channel", "default")
         alert = kwargs.get("alert", None)
+        title = kwargs.get("title", None)
+        body = kwargs.get("body", None)
         sound = kwargs.get("sound", None)
         badge = kwargs.get("badge", None)
         device = kwargs.get("device", None)
@@ -156,7 +158,7 @@ class AirNotifierApp(tornado.web.Application):
                         )
                 elif token["device"] == DEVICE_TYPE_FCM:
                     fcm.process(
-                        token=t, alert=alert, extra=extra, fcm=kwargs.get("fcm", {})
+                        token=t, alert=alert, title=title, body=body, extra=extra, fcm=kwargs.get("fcm", {})
                     )
                 elif token["device"] == DEVICE_TYPE_WNS:
                     if wns is not None:

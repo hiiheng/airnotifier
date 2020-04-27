@@ -55,9 +55,17 @@ class FCMClient(PushService):
 
         return formatted
 
-    def build_request(self, token, alert, **kwargs):
+    def build_request(self, token, **kwargs):
+        alert = kwargs.get("alert", None)
+        title = kwargs.get("title", None)
+        body = kwargs.get("body", None)
+
         if alert is not None and not isinstance(alert, dict):
             alert = {"body": alert, "title": alert}
+        if title is not None and not isinstance(title, dict):
+            alert["title"] = title
+        if body is not None and not isinstance(body, dict):
+            alert["body"] = body
 
         fcm_param = kwargs.get("payload", {})
         android = fcm_param.get("android", {})
@@ -91,6 +99,8 @@ class FCMClient(PushService):
         payload = kwargs.get("payload", {})
         extra = kwargs.get("extra", {})
         alert = kwargs.get("alert", None)
+        title = kwargs.get("title", None)
+        body = kwargs.get("body", None)
         appdb = kwargs.get("appdb", None)
         token = kwargs["token"]
 
@@ -103,7 +113,8 @@ class FCMClient(PushService):
             "Content-Type": "application/json; UTF-8",
         }
 
-        data = self.build_request(token, alert, extra=extra, payload=payload)
+        data = self.build_request(token, alert=alert, title=title, body=body, extra=extra, payload=payload)
+
         response = requests.post(self.endpoint, data=data, headers=headers)
 
         if response.status_code >= 400:

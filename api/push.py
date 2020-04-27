@@ -87,7 +87,9 @@ class PushHandler(APIBaseHandler):
 
             device = requestPayload.get("device", DEVICE_TYPE_FCM).lower()
             channel = requestPayload.get("channel", "default")
-            alert = requestPayload.get("alert", "")
+            alert = requestPayload.get("alert", "")     # todo update other message protocols
+            title = requestPayload.get("title", "")
+            body = requestPayload.get("body", "")
             token = self.db.tokens.find_one({"token": self.token})
 
             if not token:
@@ -113,7 +115,7 @@ class PushHandler(APIBaseHandler):
                 try:
                     fcmconn = self.fcmconnections[self.app["shortname"]][0]
                     response = fcmconn.process(
-                        token=self.token, alert=alert, extra=extra, payload=fcm_payload
+                        token=self.token, alert=alert, title=title, body=body, extra=extra, payload=fcm_payload
                     )
                 except Exception as ex:
                     self.send_response(INTERNAL_SERVER_ERROR, dict(error=str(ex)))
@@ -150,7 +152,7 @@ class PushHandler(APIBaseHandler):
                 return
 
             logmessage = "payload: %s, access key: %s" % (
-                self.request.body.encode("utf-8"),
+                self.request.body,
                 self.appkey,
             )
             self.add_to_log("notification", logmessage)

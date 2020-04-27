@@ -42,6 +42,7 @@ import urllib.request, urllib.parse, urllib.error
 import uuid
 import requests
 import tornado.web
+import re
 
 from util import json_decode, json_encode
 from constants import (
@@ -80,6 +81,10 @@ class APIBaseHandler(tornado.web.RequestHandler):
     """APIBaseHandler class to precess REST requests
     """
 
+    def options(self):
+        self.set_status(204)
+        self.finish()
+
     def initialize(self):
         self.accesskeyrequired = True
         self._time_start = time.time()
@@ -87,7 +92,12 @@ class APIBaseHandler(tornado.web.RequestHandler):
     def prepare(self):
         """Pre-process HTTP request
         """
-        self.appname = None
+        self.request_summary = re.split(" ", self._request_summary())
+
+        if self.request_summary[0] != "OPTIONS":
+            self.prepare_helper()
+
+    def prepare_helper(self):
         if "X-An-App-Name" in self.request.headers:
             self.appname = self.request.headers["X-An-App-Name"]
         else:
@@ -125,8 +135,7 @@ class APIBaseHandler(tornado.web.RequestHandler):
 
         if not self.app:
             self.send_response(BAD_REQUEST, dict(error="Invalid application name"))
-
-        if not self.check_blockediplist(self.request.remote_ip, self.app):
+        elif self.check_blockediplist(self.request.remote_ip, self.app):
             self.send_response(LOCKED, dict(error="Blocked IP"))
         else:
             key = self.db.keys.find_one({"key": self.appkey})
@@ -155,6 +164,9 @@ class APIBaseHandler(tornado.web.RequestHandler):
             for blockedip in iplist:
                 if IPAddress(ip) in IPNetwork(blockedip):
                     return False
+        # simple check for localhost
+        if ip == "::1":
+            return False
         return True
 
     @property
@@ -205,6 +217,9 @@ class APIBaseHandler(tornado.web.RequestHandler):
     def set_default_headers(self):
         self.set_header("Content-Type", "application/json; charset=utf-8")
         self.set_header("X-Powered-By", "AirNotifier/%s" % RELEASE)
+        self.set_header("Access-Control-Allow-Origin", "*") # todo specify domain origin
+        self.set_header("Access-Control-Allow-Methods", "POST, DELETE, OPTIONS")
+        self.set_header("Access-Control-Allow-Headers", "Origin, Accept, Content-Type, Access-Control-Allow-Headers, Authorization, X-Requested-With, X-AN-APP-NAME, X-AN-APP-KEY")
 
     def set_headers(self, headers):
         for name in headers:

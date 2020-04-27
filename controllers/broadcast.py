@@ -48,10 +48,23 @@ class AppBroadcastHandler(WebBaseHandler):
         if not app:
             raise tornado.web.HTTPError(500)
         alert = self.get_argument("notification").strip()
+
+        notification = None
+        try:
+            notification = json_decode(alert)
+        except Exception as ex:
+            error_log("Missing json body")
+
+        title = None
+        body = None
+        if notification:
+            title = notification["title"]
+            body = notification["body"]
+
         sound = "default"
         channel = "default"
         self.application.send_broadcast(
-            self.appname, self.db, channel=channel, alert=alert, sound=sound
+            self.appname, self.db, channel=channel, alert=alert, title=title, body=body, sound=sound
         )
         self.render("app_broadcast.html", app=app, sent=True)
 
