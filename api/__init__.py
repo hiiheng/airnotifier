@@ -252,13 +252,14 @@ class APIBaseHandler(tornado.web.RequestHandler):
 
 class EntityBuilder(object):
     @staticmethod
-    def build_token(token, device, appname, channel, created=time.time()):
+    def build_token(token, device, appname, channel, user, created=time.time()):
         tokenentity = {}
         tokenentity["device"] = device
         tokenentity["appname"] = appname
         tokenentity["token"] = token
         tokenentity["channel"] = channel
         tokenentity["created"] = created
+        tokenentity["user"] = user
         return tokenentity
 
 
@@ -289,6 +290,7 @@ class TokenV1Handler(APIBaseHandler):
             return
 
         device = self.get_argument("device", DEVICE_TYPE_FCM).lower()
+        user = self.get_argument("user", "")
 
         if device == DEVICE_TYPE_IOS and devicetoken:
             if len(devicetoken) != 64:
@@ -309,7 +311,7 @@ class TokenV1Handler(APIBaseHandler):
 
         channel = self.get_argument("channel", "default")
 
-        token = EntityBuilder.build_token(devicetoken, device, self.appname, channel)
+        token = EntityBuilder.build_token(devicetoken, device, self.appname, user, channel)
         try:
             result = self.db.tokens.update(
                 {"device": device, "token": devicetoken, "appname": self.appname},
@@ -347,6 +349,7 @@ class NotificationHandler(APIBaseHandler):
         alert = "".join(self.get_argument("alert").splitlines())
 
         device = self.get_argument("device", DEVICE_TYPE_IOS).lower()
+        user = self.get_argument("user", "")
         channel = self.get_argument("channel", "default")
         # Android
         collapse_key = self.get_argument("collapse_key", "")
@@ -357,7 +360,7 @@ class NotificationHandler(APIBaseHandler):
         token = self.db.tokens.find_one({"token": self.token})
 
         if not token:
-            token = EntityBuilder.build_token(self.token, device, self.appname, channel)
+            token = EntityBuilder.build_token(self.token, device, self.appname, user, channel)
             if not self.can("create_token"):
                 self.send_response(
                     BAD_REQUEST,

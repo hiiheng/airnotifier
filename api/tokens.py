@@ -66,6 +66,7 @@ class TokenV2Handler(APIBaseHandler):
 
         device = data.get("device", DEVICE_TYPE_IOS).lower()
         channel = data.get("channel", "default")
+        user = data.get("user", "")
         devicetoken = data.get("token", "")
 
         if device == DEVICE_TYPE_IOS:
@@ -77,10 +78,10 @@ class TokenV2Handler(APIBaseHandler):
             except Exception as ex:
                 self.send_response(BAD_REQUEST, dict(error="Invalid token"))
 
-        token = EntityBuilder.build_token(devicetoken, device, self.appname, channel)
+        token = EntityBuilder.build_token(devicetoken, device, self.appname, channel, user)
         try:
             result = self.db.tokens.update(
-                {"device": device, "token": devicetoken, "appname": self.appname},
+                {"device": device, "token": devicetoken, "appname": self.appname, "user": user },
                 token,
                 upsert=True,
             )
